@@ -1,0 +1,19 @@
+{
+  "name": "jsconfuser-string-decryptor",
+  "version": "1.0.0",
+  "description": "a simple algorithm for statically decrypting the strings of a program obfuscated with JSConfuser",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0v41n/JSConfuser-String-Decryptor.git"
+  },
+  "author": "Yvain Ramora",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/0v41n/JSConfuser-String-Decryptor/issues"
+  },
+  "homepage": "https://github.com/0v41n/JSConfuser-String-Decryptor#readme"
+}
