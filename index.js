@@ -50,10 +50,33 @@ function decryptString(data) {
     var cryptedStrings = data.match(/=\s*\[.*,.*\]/i)[0].replace(/=\s*/, '').split(/\s*,\s*/g).filter(str => str.startsWith("'") && str.endsWith("'")).map(str => ConvertEscapeSequences(str.slice(1, -1))).concat(decompress(ConvertEscapeSequences(data.match(/function\s*[0-9A-Z$_]+\s*\(\s*\)\s*{\s*return\s*'.*'\s*}/i)[0].match(/'.*'/)[0].slice(1, -1))));
 
     /* decrypts strings based on their signatures */
-    cryptedStrings.forEach(strings => {
-        if (strings.startsWith('<~') && strings.endsWith('~>')) {
+    cryptedStrings.forEach(str => {
+        if (str.startsWith('<~') && str.endsWith('~>')) {
+            /*
+            if : 
+                C = 52200625 * (a'-33) + 614125 * (b'-33) + 7225 * (c'-33) + 85 * (d'-33) + (e'-33)
+            knowing that :
+                52200625/614125 = 85
+                614125/7225 = 85
+                7225/85 = 85
+            then :
+                a = 255 & C >> 24
+                b = 255 & C >> 16
+                c = 255 & C >> 8
+                d = 255 & C
+            */
+            var plaintext = [];
+            str = str.slice(2, -2).replace(/s/g, '').replace('z', '!!!!!');
+            var oldStr = str;
+            str += "uuuuu".slice(str.length % 5);
+            for(let i = 0; i < str.length; i += 5) {
+                var C = 52200625 * (str.charCodeAt(i) - 33) + 614125 * (str.charCodeAt(i+1) - 33) + 7225 * (str.charCodeAt(i+2) - 33) + 85 * (str.charCodeAt(i+3) - 33) + (str.charCodeAt(i+4) - 33)
+                plaintext.push(255 & C >> 24, 255 & C >> 16, 255 & C >> 8, 255 & C)
+            }
 
-        } else if (strings.startsWith('{') && strings.endsWith('}')) {
+            /* displays plain text */
+            console.log('\x1b[33m \''+ str +'\'\x1b[90m = \x1b[32m\'' + String.fromCharCode(...plaintext).slice(0, oldStr.length-str.length) + '\'\x1b[0m')
+        } else if (str.startsWith('{') && str.endsWith('}')) {
 
         } else {
 
