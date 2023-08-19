@@ -47,7 +47,7 @@ if (argv.i) {
 function decryptString(data) {
 
     /* finds encrypted strings */
-    var cryptedStrings = data.match(/=\s*\[.*,.*\]/i)[0].replace(/=\s*/, '').split(/\s*,\s*/g).filter(str => str.startsWith("'") && str.endsWith("'")).map(str => ConvertEscapeSequences(str.slice(1, -1))).concat(decompress(ConvertEscapeSequences(data.match(/function\s*[0-9A-Z$_]+\s*\(\s*\)\s*{\s*return\s*'.*'\s*}/i)[0].match(/'.*'/)[0].slice(1, -1))));
+    var cryptedStrings = data.match(/=\s*\[.*,.*\]/i)[0].replace(/=\s*/, '').split(/\s*,\s*/g).filter(str => str.startsWith("'") && str.endsWith("'")).map(str => ConvertEscapeSequences(str.slice(1, -1))).concat(decompress(ConvertEscapeSequences(data.match(/function\s*[0-9A-Z$_]+\s*\(\s*\)\s*{\s*return\s*'.*'\s*}/i)[0].match(/'.*'/)[0].slice(1, -1)))).concat(data.match(/'[0-9A-Z]+'/gi) ? data.match(/'[0-9A-Z]+'/gi).map(str => str.slice(1, -1)) : []);
 
     /* decrypts strings based on their signatures */
     cryptedStrings.forEach(str => {
@@ -125,9 +125,10 @@ function decryptString(data) {
                 }
                 y = y << 5 | z;
             }
-            var average = plaintext.reduce((acc, val) => acc + val, 0) / plaintext.length;
+            var plaintextAverage = plaintext.reduce((acc, val) => acc + val, 0) / plaintext.length;
+            var strAverage = Buffer.from(str).reduce((acc, val) => acc + val, 0) / str.length;
             plaintext = String.fromCharCode(...plaintext);
-            if(average >= 49 && average <= 122) {
+            if(((plaintextAverage >= 65 && plaintextAverage <= 122) || (plaintextAverage >= 49 && plaintextAverage <= 57)) && !(strAverage >= 65 && strAverage <= 122)) {
                 console.log('\x1b[90m\'' + str + '\'\x1b[0m -> \x1b[90m(plaintext entropy : \x1b[33m' + entropy(plaintext) + '\x1b[90m)\x1b[0m -> \x1b[32m\'' + plaintext + '\'\x1b[0m');
             }else{
                 console.log('\x1b[90m\'' + plaintext + '\'\x1b[0m -> \x1b[90m(plaintext entropy : \x1b[33m' + entropy(str) + '\x1b[90m)\x1b[0m -> \x1b[32m\'' + str + '\'\x1b[0m');
