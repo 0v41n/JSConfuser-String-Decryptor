@@ -53,31 +53,50 @@ function decryptString(data) {
     cryptedStrings.forEach(str => {
         if (str.startsWith('<~') && str.endsWith('~>')) {
             /*
-            if : 
-                C = 52200625 * (a'-33) + 614125 * (b'-33) + 7225 * (c'-33) + 85 * (d'-33) + (e'-33)
-            knowing that :
-                52200625/614125 = 85
-                614125/7225 = 85
-                7225/85 = 85
-            then :
-                a = 255 & C >> 24
-                b = 255 & C >> 16
-                c = 255 & C >> 8
-                d = 255 & C
+            Let S be the sequence of characters in the string str
+            For each quintuplet of characters Si, Si+1, Si+2, Si+3, Si+4, (where the indices vary in steps of 5), we define:
+                C = 52200625 * (Si - 33) + 614125 * (Si+1 - 33) + 7225 * (Si+2 - 33) + 85 * (Si+3 - 33) + (Si+4 - 33)
+            where Si represents the ASCII code of the i-th character in the S sequence.
+            The following values are extracted from C:
+                a = 255 & (C ≫ 24)
+                b = 255 & (C ≫ 16)
+                c = 255 & (C ≫ 8)
+                d = 255 & (C)
+            Each quadruplet a, b, c, d is added to the plaintext sequence where:
+            ≫ is the right shift operation.
+            & is the bitwise logical "AND" operation.
             */
             var plaintext = [];
             str = str.slice(2, -2).replace(/s/g, '').replace('z', '!!!!!');
             var oldStr = str;
             str += "uuuuu".slice(str.length % 5);
-            for(let i = 0; i < str.length; i += 5) {
-                var C = 52200625 * (str.charCodeAt(i) - 33) + 614125 * (str.charCodeAt(i+1) - 33) + 7225 * (str.charCodeAt(i+2) - 33) + 85 * (str.charCodeAt(i+3) - 33) + (str.charCodeAt(i+4) - 33)
-                plaintext.push(255 & C >> 24, 255 & C >> 16, 255 & C >> 8, 255 & C)
+            for (let i = 0; i < str.length; i += 5) {
+                var C = 52200625 * (str.charCodeAt(i) - 33) + 614125 * (str.charCodeAt(i + 1) - 33) + 7225 * (str.charCodeAt(i + 2) - 33) + 85 * (str.charCodeAt(i + 3) - 33) + (str.charCodeAt(i + 4) - 33);
+                plaintext.push(255 & C >> 24, 255 & C >> 16, 255 & C >> 8, 255 & C);
             }
-
-            /* displays plain text */
-            console.log('\x1b[33m \''+ str +'\'\x1b[90m = \x1b[32m\'' + String.fromCharCode(...plaintext).slice(0, oldStr.length-str.length) + '\'\x1b[0m')
+            console.log('\x1b[33m \'<~' + oldStr + '~>\'\x1b[90m = \x1b[32m\'' + String.fromCharCode(...plaintext).slice(0, oldStr.length - str.length) + '\'\x1b[0m');
         } else if (str.startsWith('{') && str.endsWith('}')) {
-
+            /*
+            let {S1, S2, ..., S2n} be the sequence of numbers extracted from the string str
+            For each pair S2i-1, S2i (where 1 ≤ i ≤ n) we define:
+                x = S2i-1
+                y = S2i
+            The decryption process is given by:
+                Pi = x ≫ 8 * (y & 7) & 255
+            where ≫ is the right shift operation, & is the logical "AND" operation (bit by bit) and Pi is the i-th element of the plaintext sequence.
+            The process continues for each pair until all the bits of y have been used, because after each iteration, y is shifted three positions to the right.
+            */
+            var plaintext = [];
+            var oldStr = str;
+            str = str.slice(1, -1).split(',').map(Number);
+            for (let i = 0; i < str.length; i += 2) {
+                var [x, y] = [str[i], str[i + 1]];
+                while(y) {
+                    plaintext.push(x >> 8 * (y & 7) & 255);
+                    y >>= 3;
+                }
+            }
+            console.log('\x1b[33m \'' + oldStr + '\'\x1b[90m = \x1b[32m\'' + String.fromCharCode(...plaintext).replace(/~/g, '') + '\'\x1b[0m');
         } else {
 
         }
