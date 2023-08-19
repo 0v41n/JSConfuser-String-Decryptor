@@ -40,10 +40,53 @@ if (argv.i) {
         console.log("\x1b[31mError: You must provide a valid input file.\x1b[0m");
     }
 } else {
-    console.log("\x1b[31mError: You need to provide an input file!\n\x1b[33mexample: node index.js --i obfuscated.js\x1b[0m");
+    console.log("\x1b[31mError: You need to provide an input file!\n\x1b[33mexample: node index.js -i obfuscated.js\x1b[0m");
 }
 
 /* function for finding strings and decrypting them */
 function decryptString(data) {
 
+    /* finds encrypted strings */
+    var cryptedStrings = data.match(/=\s*\[.*,.*\]/i)[0].replace(/=\s*/, '').split(/\s*,\s*/g).filter(str => str.startsWith("'") && str.endsWith("'")).map(str => ConvertEscapeSequences(str.slice(1, -1))).concat(decompress(ConvertEscapeSequences(data.match(/function\s*[0-9A-Z$_]+\s*\(\s*\)\s*{\s*return\s*'.*'\s*}/i)[0].match(/'.*'/)[0].slice(1, -1))));
+
+    /* decrypts strings based on their signatures */
+    cryptedStrings.forEach(strings => {
+        if (strings.startsWith('<~') && strings.endsWith('~>')) {
+
+        } else if (strings.startsWith('{') && strings.endsWith('}')) {
+
+        } else {
+
+        }
+    })
+}
+
+/* function for converts Unicode and Hexadecimal escape sequences into characters */
+function ConvertEscapeSequences(str) {
+    var newStr = "";
+    var chars = str.match(/(\\x[0-F]{2}|\\u[0-F]{4}|.)/gi);
+    chars.forEach(char => newStr += char.length != 1 ? String.fromCharCode(parseInt(char.match(/[0-F]+/i)[0], 16)) : char);
+    return newStr;
+}
+
+/* function for decompressing JSConfuser strings */
+function decompress(str) {
+    var firstChar1 = firstChar2 = str[0];
+    var byteMax = oldByte = 256
+    var uncompressedChars = [firstChar1];
+    var decompressTable = {};
+    for (let i = 1; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        if (char < byteMax) {
+            char = str[i];
+        } else {
+            char = decompressTable[char] ? decompressTable[char] : firstChar1 + firstChar2;
+        }
+        uncompressedChars.push(char);
+        firstChar2 = char.charAt(0);
+        decompressTable[oldByte] = firstChar1 + firstChar2;
+        firstChar1 = char;
+        oldByte++;
+    }
+    return uncompressedChars.join('').split('1')
 }
