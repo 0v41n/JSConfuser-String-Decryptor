@@ -32,8 +32,12 @@ This project is designed to facilitate malware analysis and reverse engineering.
 * Go to the project directory: `cd JSConfuser-String-Decryptor`
 * Installing dependencies : `npm install`
 
-## Usage
-* Run the project : `node index.js -i obfuscated.js`
+## Usage:
+    -h                Display the help menu
+    -i <filename>     Specify the input file to display decrypted strings
+    -d <string>       Decrypt a specific string
+    -v                Enable verbose mode
+    -l                Display software licensing information
 
 ## Contribute
 Contributions are welcome! Follow these steps to contribute to this project:
