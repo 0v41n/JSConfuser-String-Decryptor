@@ -66,7 +66,7 @@ function decryptString(data) {
         if (!functionMatch) return [];
 
         let stringInsideFunction = functionMatch[0].match(/'.*'/)[0].slice(1, -1);
-        return [decompress(ConvertEscapeSequences(stringInsideFunction))];
+        return decompress(ConvertEscapeSequences(stringInsideFunction));
     }
 
     /* function to extract strings corresponding to the format '[0-9A-Z]+' */
