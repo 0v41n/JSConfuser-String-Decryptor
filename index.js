@@ -202,6 +202,28 @@ function decompress(str) {
     return uncompressedChars.join('').split('1');
 }
 
+/* function for calculating the level of obfuscation */
+function levelObfuscation(data) {
+    /*
+    regex to capture the functions of this structure :
+        function p7IuNf(y1ZWt3, GnXnHP, AqvATv, MGO0HSK = _FPkUk, dQAobBL = cYYPXL) {
+            if (AqvATv) {
+                return GnXnHP[cYYPXL[AqvATv]] = p7IuNf(y1ZWt3, GnXnHP)
+            } else {
+                if (GnXnHP) {
+                    [dQAobBL, GnXnHP] = [MGO0HSK(dQAobBL), y1ZWt3 || AqvATv]
+                }
+            }
+            return GnXnHP ? y1ZWt3[dQAobBL[GnXnHP]] : cYYPXL[y1ZWt3] || (AqvATv = (dQAobBL[y1ZWt3], MGO0HSK), cYYPXL[y1ZWt3] = AqvATv(Y1hoKew[y1ZWt3]))
+        }
+    these functions lead to the cryptographic functions, in our example the cryptographic function is _FPkUk, it is generally located just below these functions structured as follows.
+    In our use case, we want to obtain the number of these functions to find out the level of obfuscation
+    */
+    let functionMatch = data.match(/function\s*[0-9A-Z$_]+\s*\((\s*[0-9A-Z$_]+\s*(,|=|))*\)\s*\{\s*if\s*\(\s*[0-9A-Z$_]+\s*\)\s*{\s*return\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\]\s*\]\s*=\s*[0-9A-Z$_]+\s*\(\s*[0-9A-Z$_]+\s*,\s*[0-9A-Z$_]+\s*\)\s*}\s*else\s*({\s*|)if\s*\(\s*[0-9A-Z$_]+\s*\)\s*{\s*\[\s*[0-9A-Z$_]+\s*,\s*[0-9A-Z$_]+\s*\]\s*=\s*\[\s*[0-9A-Z$_]+\s*\(\s*[0-9A-Z$_]+\s*\)\s*,\s*[0-9A-Z$_]+\s*\|\|\s*[0-9A-Z$_]+\s*\]\s*(}|)\s*}\s*return\s*[0-9A-Z$_]+\s*\?\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\]\s*\]\s*:\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\]\s*\|\|\s*\(\s*[0-9A-Z$_]+\s*=\s*\(\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\]\s*,\s*[0-9A-Z$_]+\s*\)\s*,\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\]\s*=\s*[0-9A-Z$_]+\s*\(\s*[0-9A-Z$_]+\s*\[\s*[0-9A-Z$_]+\s*\]\s*\)\s*\)\s*\}[ \s;]*/gi)
+    if (!functionMatch) return 0;
+    return functionMatch.length
+}
+
 /* function for calculating the entropy of a character string */
 function entropy(str) {
     /*
