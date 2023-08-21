@@ -60,7 +60,7 @@ if (argv.h) {
         console.log("Error:\n    You must provide a valid input file.");
     }
 } else if (argv.d) {
-
+    decrypt(ConvertEscapeSequences(String(argv.d)), undefined);
 } else {
     console.log(help);
 }
@@ -198,11 +198,16 @@ function decrypt(str, level) {
             }
         }
         plaintext = String.fromCharCode(...plaintext);
-        if (str.length > 2 && plaintext.length > 2) {
-            if (entropy(plaintext) < entropy(str)) {
-                printResult(str, plaintext);
-            } else {
-                printResult(entropy(plaintext) < 50 ? plaintext : null, str);
+        if(level == undefined) {
+            printResult(str, plaintext);
+            printResult(str, String.fromCharCode(...base91Decode(str)));
+        } else {
+            if (str.length > 2 && plaintext.length > 2) {
+                if (entropy(plaintext) < entropy(str)) {
+                    printResult(str, plaintext);
+                } else {
+                    printResult(entropy(plaintext) < 50 ? plaintext : null, str);
+                }
             }
         }
     }
