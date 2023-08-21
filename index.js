@@ -46,8 +46,39 @@ if (argv.i) {
 /* function for finding strings and decrypting them */
 function decryptString(data) {
 
+    /* function for extracting encrypted strings in the format `= [ ... ]` */
+    function extractCryptedStrings(data) {
+        let matchedData = data.match(/=\s*\[.*,.*\]/i);
+        if (!matchedData) return [];
+
+        return matchedData[0]
+            .replace(/=\s*/, '')
+            .split(/\s*,\s*/)
+            .filter(str => str.startsWith("'") && str.endsWith("'"))
+            .map(str => ConvertEscapeSequences(str.slice(1, -1)));
+    }
+
+    /* function to extract strings from a specific function */
+    function extractStringsFromFunction(data) {
+
+        /* regex to capture functions returning strings of characters */
+        let functionMatch = data.match(/function\s*[0-9A-Z$_]+\s*\(\s*\)\s*{\s*return\s*'.*'\s*}/i);
+        if (!functionMatch) return [];
+
+        let stringInsideFunction = functionMatch[0].match(/'.*'/)[0].slice(1, -1);
+        return [decompress(ConvertEscapeSequences(stringInsideFunction))];
+    }
+
+    /* function to extract strings corresponding to the format '[0-9A-Z]+' */
+    function extractFormattedStrings(data) {
+        let matchedStrings = data.match(/'[0-9A-Z]+'/gi);
+        return matchedStrings ? matchedStrings.map(str => str.slice(1, -1)) : [];
+    }
+
     /* finds encrypted strings */
-    var cryptedStrings = data.match(/=\s*\[.*,.*\]/i)[0].replace(/=\s*/, '').split(/\s*,\s*/g).filter(str => str.startsWith("'") && str.endsWith("'")).map(str => ConvertEscapeSequences(str.slice(1, -1))).concat(decompress(ConvertEscapeSequences(data.match(/function\s*[0-9A-Z$_]+\s*\(\s*\)\s*{\s*return\s*'.*'\s*}/i)[0].match(/'.*'/)[0].slice(1, -1)))).concat(data.match(/'[0-9A-Z]+'/gi) ? data.match(/'[0-9A-Z]+'/gi).map(str => str.slice(1, -1)) : []);
+    var functionStrings = extractStringsFromFunction(data);
+    var formattedStrings = extractFormattedStrings(data);
+    var cryptedStrings = extractCryptedStrings(data).concat(functionStrings, formattedStrings);
 
     /* decrypts strings based on their signatures */
     cryptedStrings.forEach(str => {
@@ -116,11 +147,11 @@ function decryptString(data) {
             */
             var plaintext = [];
             var x = y = 0;
-            for(let i = 0; i < str.length; i++) {
+            for (let i = 0; i < str.length; i++) {
                 var z = str.charCodeAt(i) - 33;
                 x += 5;
-                if(x >= 8){
-                    x -=8;
+                if (x >= 8) {
+                    x -= 8;
                     plaintext.push((y << 5 | z) >> x & 255);
                 }
                 y = y << 5 | z;
@@ -128,9 +159,9 @@ function decryptString(data) {
             var plaintextAverage = plaintext.reduce((acc, val) => acc + val, 0) / plaintext.length;
             var strAverage = Buffer.from(str).reduce((acc, val) => acc + val, 0) / str.length;
             plaintext = String.fromCharCode(...plaintext);
-            if(((plaintextAverage >= 65 && plaintextAverage <= 122) || (plaintextAverage >= 49 && plaintextAverage <= 57)) && !(strAverage >= 65 && strAverage <= 122)) {
+            if (((plaintextAverage >= 65 && plaintextAverage <= 122) || (plaintextAverage >= 49 && plaintextAverage <= 57)) && !(strAverage >= 65 && strAverage <= 122)) {
                 console.log('\x1b[90m\'' + str + '\'\x1b[0m -> \x1b[90m(plaintext entropy : \x1b[33m' + entropy(plaintext) + '\x1b[90m)\x1b[0m -> \x1b[32m\'' + plaintext + '\'\x1b[0m');
-            }else{
+            } else {
                 console.log('\x1b[90m\'' + plaintext + '\'\x1b[0m -> \x1b[90m(plaintext entropy : \x1b[33m' + entropy(str) + '\x1b[90m)\x1b[0m -> \x1b[32m\'' + str + '\'\x1b[0m');
             }
         }
